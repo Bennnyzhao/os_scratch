@@ -1,22 +1,24 @@
 .code16
 
-.globl _start
+.globl _start, begtext, begdata, begbss, endtext, enddata, endbss
+
+.text
+begtext:
+.data 
+begdata:
+.bss
+begbss:
 
 .text
 _start:
     mov $0x07c0, %ax
     mov %ax, %es
-    mov %ax, %ds
-    
-    mov $msg1, %di
-    movb $65, %al
-    movb %al, 2(%di)
     
     mov $0x3, %ah
     xor %bh, %bh
     int $0x10
     
-    mov $35, %cx
+    mov $24, %cx
     mov $0x0007, %bx
     mov $msg1, %bp
     mov $0x1301, %ax
@@ -27,10 +29,16 @@ loop:
     
 msg1:
       .byte 13, 10
-      .ascii "Hello boot sector, 512 byes ..."
-      .byte 13, 10
+      .ascii "Loading system ..."
+      .byte 13, 10, 13, 10
     
 .org 510
 boot_flag:
     .word 0xAA55
 
+.text
+endtext:
+.data
+enddata:
+.bss
+endbss:
