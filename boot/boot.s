@@ -1,24 +1,33 @@
 .code16
 
-.globl _start, begtext, begdata, begbss, endtext, enddata, endbss
+.equ BOOTSEG, 0x07c0
+.equ INITSEG, 0x9000
 
-.text
-begtext:
-.data 
-begdata:
-.bss
-begbss:
+.globl _start
 
 .text
 _start:
-    mov $0x07c0, %ax
+    mov $BOOTSEG, %ax
+    mov %ax, %ds
+    mov $INITSEG, %ax
     mov %ax, %es
-    
+    mov $256, %cx
+    xor %di, %di
+    xor %si, %si
+    rep
+    movsw
+    ljmp $INITSEG, $go
+  
+go:
+    mov %cs, %ax
+    mov %ax, %ds
+    mov %ax, %es
+      
     mov $0x3, %ah
     xor %bh, %bh
     int $0x10
     
-    mov $24, %cx
+    mov $35, %cx
     mov $0x0007, %bx
     mov $msg1, %bp
     mov $0x1301, %ax
@@ -29,16 +38,10 @@ loop:
     
 msg1:
       .byte 13, 10
-      .ascii "Loading system ..."
-      .byte 13, 10, 13, 10
+      .ascii "Hello boot sector, 512 byes ..."
+      .byte 13, 10
     
 .org 510
 boot_flag:
     .word 0xAA55
 
-.text
-endtext:
-.data
-enddata:
-.bss
-endbss:
