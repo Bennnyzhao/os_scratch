@@ -26,6 +26,6 @@ msg1:
     .ascii "Beyond 512 byes ..."
     .byte 13, 10
     
-.org 512
+.org 2048
 
     
