@@ -2,4 +2,8 @@
 bochsout.txt
 bochsrc
 *.o
+cscope.in.out
+cscope.out
+cscope.po.out
+tags
 Image

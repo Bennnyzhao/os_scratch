@@ -6,6 +6,11 @@
 _start:
     mov $0x07c0, %ax
     mov %ax, %es
+    mov %ax, %ds
+    
+    mov $msg1, %di
+    movb $65, %al
+    movb %al, 2(%di)
     
     mov $0x3, %ah
     xor %bh, %bh
