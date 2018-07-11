@@ -22,6 +22,24 @@ go:
     mov %cs, %ax
     mov %ax, %ds
     mov %ax, %es
+    
+    mov $0x00, %dl
+    mov $0x0800, %ax
+    int $0x13
+    movb $0x00, %ch
+    #andb $0x3f, %cl
+    #mov $0x4142, %cx
+    mov %cx, sectors
+    #mov %cx, %cs:sectors
+    
+    mov $INITSEG, %ax
+    mov %ax, %es
+    
+    mov $msg1, %di
+    mov sectors, %ax
+    mov %ax, 2(%di)
+    #mov %ax, (%si)
+    #movsw
       
     mov $0x3, %ah
     xor %bh, %bh
@@ -40,6 +58,9 @@ msg1:
       .byte 13, 10
       .ascii "Hello boot sector, 512 byes ..."
       .byte 13, 10
+      
+sectors:
+      .word 0
     
 .org 510
 boot_flag:
