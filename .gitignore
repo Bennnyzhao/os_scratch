@@ -1,0 +1,5 @@
+#build temp files
+bochsout.txt
+bochsrc
+*.o
+Image
