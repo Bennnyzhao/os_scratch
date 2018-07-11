@@ -2,6 +2,7 @@
 
 .equ BOOTSEG, 0x07c0
 .equ INITSEG, 0x9000
+.equ SETUPSEG, 0x9020
 .equ SETUPLEN, 1
 
 .globl _start
@@ -18,7 +19,7 @@ _start:
     rep
     movsw
     ljmp $INITSEG, $go
-  
+
 go:
     mov %cs, %ax
     mov %ax, %ds
@@ -47,8 +48,8 @@ ok_load_setup:
     mov $0x1301, %ax
     int $0x10
     
-loop:
-    jmp loop
+    #ljmp $SETUPSEG, $0
+    jmp _setup
     
 msg1:
       .byte 13, 10
@@ -58,7 +59,4 @@ msg1:
 .org 510
 boot_flag:
     .word 0xAA55
-
-.org 1022
-    .word 0xBEEF
 
