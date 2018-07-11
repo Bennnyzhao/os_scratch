@@ -2,6 +2,7 @@
 
 .equ BOOTSEG, 0x07c0
 .equ INITSEG, 0x9000
+.equ SETUPLEN, 1
 
 .globl _start
 
@@ -23,24 +24,19 @@ go:
     mov %ax, %ds
     mov %ax, %es
     
-    mov $0x00, %dl
-    mov $0x0800, %ax
+load_setup:
+    mov $0x0000, %dx
+    mov $0x0002, %cx
+    mov $0x0200, %bx
+    mov $0x0200 + SETUPLEN, %ax
     int $0x13
-    movb $0x00, %ch
-    #andb $0x3f, %cl
-    #mov $0x4142, %cx
-    mov %cx, sectors
-    #mov %cx, %cs:sectors
-    
-    mov $INITSEG, %ax
-    mov %ax, %es
-    
-    mov $msg1, %di
-    mov sectors, %ax
-    mov %ax, 2(%di)
-    #mov %ax, (%si)
-    #movsw
-      
+    jnc ok_load_setup
+    mov $0x0000, %dx
+    mov $0x0000, %ax
+    int $0x13
+    jmp load_setup
+
+ok_load_setup:  
     mov $0x3, %ah
     xor %bh, %bh
     int $0x10
@@ -58,11 +54,11 @@ msg1:
       .byte 13, 10
       .ascii "Hello boot sector, 512 byes ..."
       .byte 13, 10
-      
-sectors:
-      .word 0
     
 .org 510
 boot_flag:
     .word 0xAA55
+
+.org 1022
+    .word 0xBEEF
 

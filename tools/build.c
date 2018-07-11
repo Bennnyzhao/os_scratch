@@ -61,9 +61,9 @@
       /* 读取实际代码数据，应该返回读取字节数为512 字节。 */
       i = read(id, buf, sizeof(buf));
       fprintf(stderr, "Boot sector %d bytes.\n", i);
-      if(i != 512)
+      if(i != 1024)
       {
-        die("Boot block must be exactly 512 bytes");
+        die("Boot block must be exactly 1024 bytes");
       }
 
       /* 判断boot 块0x510 处是否有可引导标志0xAA55。 */
