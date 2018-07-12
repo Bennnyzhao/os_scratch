@@ -69,6 +69,21 @@ static void get_time(void)
 
 unsigned long pos;
 unsigned long x;
+int task_int(int num)
+{
+    long res=0;
+    __asm__ volatile("int $0x80\n\t"
+	:"=a"(res):"0"(num));
+    for(int i=0; i<1000000; i++);
+    return (int)res;
+}
+
+static int task0(void)
+{
+    while(1){
+	task_int(0);
+    }
+}
 
 void main(void)
 {
@@ -79,7 +94,7 @@ void main(void)
     sched_init();
     sti();
     move_to_user_mode();
-    while(1);
+    task0();
 }
 
 static void dispaly_time(void)
@@ -109,12 +124,25 @@ static void dispaly_time(void)
     *p = i+0x30;
 }
 
+void display_task(int num)
+{
+    printk("task %d\n", num);
+}
+
+static unsigned int flag=0;
 void do_timer(void)
 {
     //outb(0x20,0x20);
     //set_pos(pos, x);
     //printk("%02d:%02d:%02d",timenow.tm_hour, timenow.tm_min, timenow.tm_sec);
     dispaly_time();
+    if(flag == 0){
+	flag=1;
+        switch_to(1);
+    }else{
+	flag=0;
+        switch_to(0);
+    }
 }
 
 void set_int(void)

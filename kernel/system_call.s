@@ -34,10 +34,30 @@
  * Ok, I get parallel printer interrupts while using the floppy for some
  * strange reason. Urgel. Now I just ignore them.
  */
-
+.globl system_call
 .globl timer_interrupt
 
-.align 2
+.align 4
+system_call:
+    push %ds
+    push %es
+    pushl %edx
+    pushl %ecx
+    pushl %ebx
+    pushl %eax
+    movl $0x10,%edx
+    mov %dx,%ds
+    mov %dx,%es
+    call display_task
+    popl %eax
+    popl %ebx
+    popl %ecx
+    popl %edx
+    pop %es
+    pop %ds
+    iret
+
+.align 4
 timer_interrupt:
    push %ds
    push %es

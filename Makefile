@@ -5,9 +5,10 @@ LDFLAGS	:=-m elf_i386 -Ttext 0 -e _start
 CC = gcc 
 
 HOST-CFLAGS = -Wall -O2 -fomit-frame-pointer
-CFLAGS = -Wall -fomit-frame-pointer
+CFLAGS	=-Wall -O -fno-stack-protector -fstrength-reduce -fomit-frame-pointer \
+	-finline-functions -nostdinc -Iinclude
 
-CPP	=cpp -nostdinc -Iinclude
+CPP	=cpp -E -nostdinc -Iinclude
 
 ROOT_DEV= #FLOPPY
 

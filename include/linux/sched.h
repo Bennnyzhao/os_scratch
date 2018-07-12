@@ -1,6 +1,12 @@
 #ifndef __SCHED_H
 #define __SCHED_H
 
+#define switch_to(n){ \
+    struct{long a; long b;} __tmp;\
+    __asm__("movw %%dx, %1\n\t"\
+	"ljmp *%0"\
+	::"m"(*&__tmp.a), "m"(*&__tmp.b),"d"(_TSS(n)));\
+}
 struct tss_struct {
     long    back_link;	/* 16 high bits zero */
     long    esp0;
