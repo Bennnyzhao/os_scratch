@@ -1,7 +1,4 @@
 
-typedef struct desc_struct {
-	unsigned long a,b;
-} desc_table[256];
     
 char *display_tm;
 char kb_buf[2];

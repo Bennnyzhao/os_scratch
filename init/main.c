@@ -1,10 +1,12 @@
 /*
      init/main.c		Reference to Linus Torvalds Linux-0.11
 */
+#include <linux/head.h>
 #include <linux/tty.h>
 #include <linux/kernel.h>
 #include <asm/io.h>
 #include <asm/system.h>
+#include <linux/sched.h>
 
 
 #define HZ 100
@@ -14,9 +16,6 @@
 void set_int(void);
 extern int timer_interrupt(void);
 
-
-
-extern desc_table idt;
 
 long user_stack[4096>>2] ;
 
@@ -76,9 +75,10 @@ void main(void)
     int i=10;
     con_init();
     set_int();
-    sti();
     printk("hello printk %d\n", i);
-    //pos = get_pos(&x);
+    sched_init();
+    sti();
+    move_to_user_mode();
     while(1);
 }
 

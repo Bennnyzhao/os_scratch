@@ -1,3 +1,32 @@
+#define move_to_user_mode() \
+__asm__("movl %%esp, %%eax\n\t"\
+	"pushl $0x17\n\t"\
+	"pushl %%eax\n\t"\
+	"pushfl \n\t"\
+	"pushl $0xf\n\t"\
+	"pushl $1f\n\t"\
+	"iret\n\t"\
+	"1: movl $0x17, %%eax\n\t"\
+	"movw %%ax, %%ds\n\t"\
+	"movw %%ax, %%es\n\t"\
+	"movw %%ax, %%fs\n\t"\
+	"movw %%ax, %%gs"\
+	:::"ax")
+
+/*#define move_to_user_mode() \
+__asm__ ("movl %%esp,%%eax\n\t" \
+    "pushl $0x17\n\t" \
+    "pushl %%eax\n\t" \
+    "pushfl\n\t" \
+    "pushl $0x0f\n\t" \
+    "pushl $1f\n\t" \
+    "iret\n" \
+    "1:\tmovl $0x17,%%eax\n\t" \
+    "movw %%ax,%%ds\n\t" \
+    "movw %%ax,%%es\n\t" \
+    "movw %%ax,%%fs\n\t" \
+    "movw %%ax,%%gs" \
+    :::"ax")*/
 
 #define sti() __asm__ ("sti"::)        // 开中断嵌入汇编宏函数。set interrupt
 #define cli() __asm__ ("cli"::)        // 关中断。clear interrupt
@@ -26,6 +55,34 @@
 #define set_system_gate(n,addr) \
     _set_gate(&idt[n], 15, 3, addr)
 
+/*#define _set_tssldt_desc(n,addr,type) \
+__asm__ ("movw $104,%1\n\t" \
+    "movw %%ax,%2\n\t" \
+    "rorl $16,%%eax\n\t" \
+    "movb %%al,%3\n\t" \
+    "movb $" type ",%4\n\t" \
+    "movb $0x00,%5\n\t" \
+    "movb %%ah,%6\n\t" \
+    "rorl $16,%%eax" \
+    ::"a" (addr), "m" (*(n)), "m" (*(n+2)), "m" (*(n+4)), \
+     "m" (*(n+5)), "m" (*(n+6)), "m" (*(n+7)) \
+    )
 
 
-
+#define set_tss_desc(n, addr)  _set_tssldt_desc(((char*)n), (int)addr, "0xe9")
+#define set_ldt_desc(n, addr)  _set_tssldt_desc(((char*)n), (int)addr, "0xe2")
+*/
+#define _set_tssldt_desc(n,addr,type) \
+__asm__ ("movw $104,%1\n\t" \
+    "movw %%ax,%2\n\t" \
+    "rorl $16,%%eax\n\t" \
+    "movb %%al,%3\n\t" \
+    "movb $" type ",%4\n\t" \
+    "movb $0x00,%5\n\t" \
+    "movb %%ah,%6\n\t" \
+    "rorl $16,%%eax" \
+    ::"a" (addr), "m" (*(n)), "m" (*(n+2)), "m" (*(n+4)), \
+     "m" (*(n+5)), "m" (*(n+6)), "m" (*(n+7)) \
+    )
+#define set_tss_desc(n,addr) _set_tssldt_desc(((char *) (n)),((int)(addr)),"0x89")
+#define set_ldt_desc(n,addr) _set_tssldt_desc(((char *) (n)),((int)(addr)),"0x82")

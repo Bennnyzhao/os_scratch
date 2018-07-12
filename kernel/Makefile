@@ -17,7 +17,7 @@ CPP	=gcc -E -nostdinc -I../include
 	$(CC) $(CFLAGS) \
 	-c -o $*.o $<
 
-OBJS  = printk.o system_call.o vsprintf.o
+OBJS  = sched.o printk.o system_call.o vsprintf.o
 
 kernel.o: $(OBJS)
 	$(LD) $(LDFLAGS) -r -o kernel.o $(OBJS)

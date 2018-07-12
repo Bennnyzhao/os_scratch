@@ -1,4 +1,4 @@
-
+#include <linux/head.h>
 #include <linux/tty.h>
 #include <asm/io.h>
 #include <asm/system.h>
