@@ -7,6 +7,8 @@ CC = gcc
 HOST-CFLAGS = -Wall -O2 -fomit-frame-pointer
 CFLAGS = -Wall -fomit-frame-pointer
 
+CPP	=cpp -nostdinc -Iinclude
+
 ROOT_DEV= #FLOPPY
 
 .s.o:
