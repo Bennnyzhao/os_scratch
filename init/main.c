@@ -93,8 +93,9 @@ void main(void)
     printk("hello printk %d\n", i);
     sched_init();
     sti();
-    move_to_user_mode();
-    task0();
+    //move_to_user_mode();
+    //task0();
+    while(1);
 }
 
 static void dispaly_time(void)
