@@ -1,44 +1,13 @@
 /*
      init/main.c		Reference to Linus Torvalds Linux-0.11
 */
-
-inline void check_data32(int val, int pos);
+#include <linux/tty.h>
 
 void main(void)
 {
-    int pos;
-    /* row: 46, column: 0*/
-    pos = (80*46) >> 4;
-    check_data32(0xA0B4A0C5, pos);
-    pos++;
-    check_data32(0xFF00FF00, pos);
+    con_init();
+    con_write("hello main! I am jumping in.\n");
     while(1);
-}
-
-void check_data32(int val, int pos)
-{
-    __asm__ __volatile__(
-        "shl   $4, %%ebx\n\t"
-        "addl  $0xb8000, %%ebx\n\t"
-        "movl  $0xf0000000, %%eax\n\t"
-        "movb  $28, %%cl\n"
-        "1:\n\t"
-        "movl  %0, %%edx\n\t"
-        "andl  %%eax, %%edx\n\t"
-        "shr   %%cl, %%edx\n\t"
-        "add   $0x30, %%dx\n\t"
-        "cmp   $0x3a, %%dx\n\t"
-        "jb 2f\n\t"
-        "add   $0x07, %%dx\n"
-        "2:\n\t"
-        "add   $0x0c00, %%dx\n\t"
-        "movw  %%dx, (%%ebx)\n\t"
-        "add   $0x02, %%ebx\n\t"
-        "sub   $0x04, %%cl\n\t"
-        "shr   $0x04, %%eax\n\t"
-        "cmpl  $0x0, %%eax\n\t"
-        "jnz 1b\n"
-        ::"m"(val), "b"(pos));
 }
 
 

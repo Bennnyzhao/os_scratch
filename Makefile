@@ -11,12 +11,14 @@ CPP	=cpp -nostdinc -Iinclude
 
 ROOT_DEV= #FLOPPY
 
+DRIVERS =kernel/chr_drv/chr_drv.a
+
 .s.o:
 	$(AS) --32 -o $*.o $<
 	
 .c.o:
 	$(CC) $(CFLAGS) \
-	-m32 -nostdinc -I./include -c -o $*.o $<
+	-m32 -nostdinc -Iinclude -c -o $*.o $<
 
 all: Image
 
@@ -38,8 +40,10 @@ boot/boot.o: boot/boot.s
 
 boot/setup.o: boot/setup.s
 
-tools/system: boot/head.o init/main.o
-	$(LD) $(LDFLAGS) boot/head.o init/main.o -o tools/system
+tools/system: boot/head.o init/main.o \
+$(DRIVERS)
+	$(LD) $(LDFLAGS) boot/head.o init/main.o $(DRIVERS) \
+-o tools/system
 	nm tools/system | grep -v '\(compiled\)\|\(\.o$$\)\|\( [aU] \)\|\(\.\.ng$$\)\|\(LASH[RL]DI\)'| sort > System.map
 
 boot/boot: boot/boot.o boot/setup.o
@@ -47,14 +51,20 @@ boot/boot: boot/boot.o boot/setup.o
 	objcopy -O binary -R .note -R .comment boot/bootsect boot/boot
 	rm boot/bootsect -f
 
+kernel/chr_drv/chr_drv.a:
+	(cd kernel/chr_drv; make)
+
 clean:
 	rm -f Image System.map boot/boot
 	rm -f init/*.o tools/system boot/*.o tools/build
+	(cd kernel/chr_drv; make clean)
 
 dep:
 	sed '/\#\#\# Dependencies/q' < Makefile > tmp_make
 	(for i in init/*.c;do echo -n "init/";$(CPP) -M $$i;done) >> tmp_make
 	cp tmp_make Makefile
+	(cd kernel/chr_drv; make dep)
 
 ### Dependencies:
-init/main.o: init/main.c
+init/main.o: init/main.c \
+include/linux/tty.h
