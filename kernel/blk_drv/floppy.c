@@ -122,12 +122,6 @@ static unsigned char command = 0;
 unsigned char selected = 0;
 struct task_struct * wait_on_floppy_select = NULL;
 
-int sys_setup(void * BIOS)
-{
-    mount_root();
-    return (0);
-}
-
 void floppy_deselect(unsigned int nr)
 {
 	if (nr != (current_DOR & 3))

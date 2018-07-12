@@ -218,7 +218,7 @@ sys_fork:
 	addl $20,%esp
 1:	ret
 
-/*hd_interrupt:
+hd_interrupt:
 	pushl %eax
 	pushl %ecx
 	pushl %edx
@@ -248,7 +248,6 @@ sys_fork:
 	popl %ecx
 	popl %eax
 	iret
-*/
 
 floppy_interrupt:
 	pushl %eax

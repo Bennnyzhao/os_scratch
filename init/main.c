@@ -131,7 +131,7 @@ void main(void)		/* This really IS void, no error here. */
 	time_init();
 	sched_init();
 	buffer_init(buffer_memory_end);
-	//hd_init();
+	hd_init();
 	floppy_init();
 	sti();
 	move_to_user_mode();
@@ -171,9 +171,6 @@ void init(void)
 
 	setup((void *) &drive_info);
 	(void) open("/dev/tty0",O_RDWR,0);
-//	if( open("/dev/tty0",O_RDWR,0)<0){
-//	    while(1);
-//	}
 	(void) dup(0);
 	(void) dup(0);
 	printf("%d buffers = %d bytes buffer space\n\r",NR_BUFFERS,
