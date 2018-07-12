@@ -61,76 +61,25 @@ go:
     
     mov $SYSSEG, %ax
     mov %ax, %es
-    call read_it
+    xor %bx, %bx
+    movb $1, %al
+    call read_track
+    mov sread, %ax
+    add $1, %ax
+    mov %ax, sread
+    
+    mov $0x2000, %ax
+    mov %ax, %es
+    xor %bx, %bx
+    movb $1, %al
+    call read_track
     
     jmp _setup
-
-status: .byte 0
+    
+status: .word 1
 sread:	.word 1
 head:	  .word 0
 track:	.word 0
-flag:   .word 0
-
-read_it:
-    #mov %es, %ax
-    #test $0x0fff, %ax
-#die:
-    #jne die
-    
-    xor %bx, %bx
-rep_read:
-    mov %es, %ax
-    cmp $ENDSEG, %ax
-    jb ok_read1
-read_ret:
-    ret
-
-ok_read1:
-    mov sectors, %ax
-    sub sread, %ax
-    mov %ax, %cx
-    shl $9,  %cx
-    add %bx, %cx
-    jnc ok_read2
-    je ok_read2
-    xor %ax, %ax
-    sub %bx, %ax
-    shr $9, %ax
-
-ok_read2:
-    call read_track
-    
-    mov %ax, %cx
-    mov flag, %ax
-    add $1, %ax
-    cmp $7, %ax
-    je read_ret
-    mov %ax, flag
-    mov %cx, %ax
-    add sread, %ax
-    cmp sectors, %ax
-    jne ok_read3
-    mov $1, %ax
-    sub head, %ax
-    jne ok_read4
-    incw track
-    
-ok_read4:
-    mov %ax, head
-    xor %ax, %ax
-    
-ok_read3:
-    mov %ax, sread
-    shl $9,  %cx
-    add %cx, %bx
-    jnc ok_read1
-    jmp read_ret
-    
-    mov %es, %ax
-    add $0x1000, %ax
-    mov %ax, %es
-    xor %bx, %bx
-    jmp rep_read
     
 read_track:
     push %ax
