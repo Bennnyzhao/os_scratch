@@ -19,23 +19,26 @@ _setup:
     mov $0x1301, %ax
     int $0x10
     
-    ljmp $0x1000, $0
+    ljmp $0x1200, $0x0
 
 msg1:
     .ascii "Beyond 512 byes ..."
     .byte 13, 10
+
+.org 256
+    jmp _setup
     
 .org 2048
-    mov $0x1000, %ax
-   # mov %ax, %ds
+    mov $0x1200, %ax
+    #mov %ax, %ds
     mov %ax, %es
     mov $0x3, %ah
     xor %bh, %bh
     int $0x10
     
-    mov $20, %cx
+    mov $16, %cx
     mov $0x0007, %bx
-    mov $0x200, %bp
+    mov $0xE004, %bp
     mov $0x1301, %ax
     int $0x10
     .word 0xFEEB
@@ -46,5 +49,5 @@ msg1:
     .ascii "Loading system ..."
     .byte 13, 10
     
-.org 0x30800
+.org 0xC00
     
