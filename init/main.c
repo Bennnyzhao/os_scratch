@@ -1,6 +1,9 @@
 /*
      init/main.c		Reference to Linus Torvalds Linux-0.11
 */
+#include <unistd.h>
+inline  _syscall0(int,fork) 
+
 #include <linux/head.h>
 #include <linux/tty.h>
 #include <linux/kernel.h>
@@ -8,21 +11,7 @@
 #include <asm/system.h>
 #include <linux/sched.h>
 
-
-#define HZ 100
-
-#define LATCH (1193180/HZ)
-
-void set_int(void);
-extern int timer_interrupt(void);
-
-
-long user_stack[4096>>2] ;
-
-struct {
-   long *a;
-   short b;
-}stack_start = {&user_stack[4096>>2], 0x10};
+extern void mem_init(long start, long end);
 
 struct tm {
 	int tm_sec;
@@ -67,38 +56,54 @@ static void get_time(void)
 	//startup_time = kernel_mktime(&timenow);
 }
 
+#define EXT_MEM_K (*(unsigned short *)0x90002)
+
 unsigned long pos;
 unsigned long x;
-int task_int(int num)
+
+static int task_demo(int num)
 {
-    long res=0;
-    __asm__ volatile("int $0x80\n\t"
-	:"=a"(res):"0"(num));
-    for(int i=0; i<1000000; i++);
-    return (int)res;
+    int i=0;
+    while(1){
+	task_int(num);
+	for(i=0; i<1000000;i++);
+    }
+    return 0;
 }
 
-static int task0(void)
-{
-    while(1){
-	task_int(0);
-    }
-}
+static long memory_end = 0;
+static long buffer_memory_end = 0;
+static long main_memory_start = 0;
 
 void main(void)
 {
     int i=10;
+    memory_end = (1<<20) + (EXT_MEM_K<<10);
+    memory_end &= 0xfffff000;
+    if (memory_end > 16*1024*1024)
+	memory_end = 16*1024*1024;
+    if (memory_end > 12*1024*1024) 
+	buffer_memory_end = 4*1024*1024;
+    else if (memory_end > 6*1024*1024)
+	buffer_memory_end = 2*1024*1024;
+    else
+	buffer_memory_end = 1*1024*1024;
+    main_memory_start = buffer_memory_end;
+    mem_init(main_memory_start, memory_end);
     con_init();
-    set_int();
     printk("hello printk %d\n", i);
     sched_init();
     sti();
-    //move_to_user_mode();
-    //task0();
+    move_to_user_mode();
+    if (!fork()) {
+	task_demo(1);
+	while(1);
+    }
+    task_demo(2);
     while(1);
 }
 
-static void dispaly_time(void)
+void dispaly_time(void)
 {   char i, *p;
     p = display_tm;
     get_time();
@@ -129,30 +134,4 @@ void display_task(int num)
 {
     printk("task %d\n", num);
 }
-
-static unsigned int flag=0;
-void do_timer(void)
-{
-    //outb(0x20,0x20);
-    //set_pos(pos, x);
-    //printk("%02d:%02d:%02d",timenow.tm_hour, timenow.tm_min, timenow.tm_sec);
-    dispaly_time();
-    if(flag == 0){
-	flag=1;
-        switch_to(1);
-    }else{
-	flag=0;
-        switch_to(0);
-    }
-}
-
-void set_int(void)
-{
-    outb_p(0x36,0x43);
-    outb_p(LATCH & 0xff , 0x40);
-    outb(LATCH >> 8 , 0x40);	/* MSB */
-    set_intr_gate(0x20,&timer_interrupt);
-    outb(inb_p(0x21)&~0x01,0x21);
-}
-
 

@@ -12,7 +12,7 @@ CPP	=cpp -E -nostdinc -Iinclude
 
 ROOT_DEV= #FLOPPY
 
-ARCHIVES=kernel/kernel.o
+ARCHIVES=kernel/kernel.o mm/mm.o
 DRIVERS =kernel/chr_drv/chr_drv.a
 
 .s.o:
@@ -60,9 +60,12 @@ kernel/chr_drv/chr_drv.a:
 kernel/kernel.o:
 	(cd kernel; make)
 
+mm/mm.o:
+	(cd mm; make)
 clean:
 	rm -f Image System.map boot/boot
 	rm -f init/*.o tools/system boot/*.o tools/build
+	(cd mm;make clean)
 	(cd kernel; make clean)
 
 dep:

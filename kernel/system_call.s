@@ -30,29 +30,41 @@
  *	2C(%esp) - %oldss
  */
 
+nr_system_calls = 72
 /*
  * Ok, I get parallel printer interrupts while using the floppy for some
  * strange reason. Urgel. Now I just ignore them.
  */
-.globl system_call
+.globl system_call,sys_fork
 .globl timer_interrupt
 
 .align 4
+bad_sys_call:
+    movl $-1, %eax
+    iret
+
+.align 4
 system_call:
+    cmpl $nr_system_calls-1, %eax
+    ja bad_sys_call
     push %ds
     push %es
+    push %fs
     pushl %edx
     pushl %ecx
     pushl %ebx
-    pushl %eax
     movl $0x10,%edx
     mov %dx,%ds
     mov %dx,%es
-    call display_task
+    movl $0x17,%edx
+    mov %dx,%fs
+    call sys_call_table(,%eax,4)
+    pushl %eax
     popl %eax
     popl %ebx
     popl %ecx
     popl %edx
+    pop %fs
     pop %es
     pop %ds
     iret
@@ -88,5 +100,17 @@ timer_interrupt:
    pop %ds
    iret
 
-
+.align 4
+sys_fork:
+    call find_empty_process
+    testl %eax, %eax
+    js 1f
+    push %gs
+    pushl %esi
+    pushl %edi
+    pushl %ebp
+    pushl %eax
+    call copy_process
+    addl $20, %esp
+1:  ret
 
