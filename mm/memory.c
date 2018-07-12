@@ -369,7 +369,6 @@ void do_no_page(unsigned long error_code,unsigned long address)
 	unsigned long page;
 	int block,i;
 
-printk("nojjjjjjjjjjjjjjjj\n");
     while(1);
 	address &= 0xfffff000;
 	tmp = address - current->start_code;

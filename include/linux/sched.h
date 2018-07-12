@@ -74,7 +74,7 @@ struct tss_struct {
     long    gs;	    /* 16 high bits zero */
     long    ldt;	/* 16 high bits zero */
     long    trace_bitmap;   /* bits: trace 0, bitmap 16-31 */
-    struct i387_struct i3887;
+    struct i387_struct i387;
 };
 
 struct task_struct {
@@ -150,9 +150,14 @@ __asm__("str %%ax\n\t"\
 
 #define switch_to(n){ \
     struct{long a; long b;} __tmp;\
-    __asm__("movw %%dx, %1\n\t"\
-	"ljmp *%0"\
-	::"m"(*&__tmp.a), "m"(*&__tmp.b),"d"(_TSS(n)));\
+    __asm__("cmpl %%ecx,current\n\t" \
+	"je 1f\n\t" \
+	"movw %%dx, %1\n\t"\
+	"xchgl %%ecx,current\n\t" \
+	"ljmp *%0\n\t"\
+	"1:" \
+	::"m"(*&__tmp.a), "m"(*&__tmp.b),"d"(_TSS(n)),\
+	"c" ((long) task[n]));\
 }
 
 #define PAGE_ALIGN(n) (((n)+0xfff)&0xfffff000)
