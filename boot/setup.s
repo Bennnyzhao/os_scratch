@@ -65,24 +65,58 @@ no_disk1:
     rep
     stosb
     
-is_disk1: 
+is_disk1:    
     mov $INITSEG, %ax
-    mov %ax, %es 
+    mov %ax, %ds
+    lgdt gdt_48
     
-    mov $0x3, %ah
-    xor %bh, %bh
-    int $0x10
+    call empty_8042
+    movb $0xD1, %al
+    outb %al, $0x64
+    call empty_8042
+    movb $0xDF, %al
+    outb %al, $0x60
+    call empty_8042
     
-    mov $19, %cx
-    mov $0x0007, %bx
-    mov $msg1, %bp
-    mov $0x1301, %ax
-    int $0x10
+    mov $0x0001, %ax
+    lmsw %ax
+    ljmp $8, $0
     
+empty_8042:
+    .word 0x00EB, 0x00EB
+    inb $0x64, %al
+    test $0x2, %al
+    jnz empty_8042
+    ret
+
+gdt:
+   .word 0, 0, 0, 0
+   
+   .word 0x07FF
+   .word start_32      # modified
+   .word 0x9A09        # modified
+   .word 0x00C0
+   
+   .word 0x07FF
+   .word 0x0000
+   .word 0x9200
+   .word 0x00C0
+    
+gdt_48:
+    .word (0x800-1)
+    .word gdt, 0x9
+    
+start_32:
+.code32
+    movl $0x10, %eax
+    mov %ax, %ds
+    movl $0xb8c80, %ebx
+    mov $0x0c41, %dx
+    movw %dx, (%ebx)
+    add $0x2, %ebx
+    mov $0x0c42, %dx
+    movw %dx, (%ebx)
+
 loop:
     jmp loop
 
-msg1:
-    .ascii "Loading setup ..."
-    .byte 13, 10
-   

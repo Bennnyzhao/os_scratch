@@ -177,7 +177,7 @@ kill_motor:
     push %dx
     mov $0x3f2, %dx
     movb $0, %al
-    outb %al, %dx 
+    outb %al, %dx
     pop  %dx
     ret
     
