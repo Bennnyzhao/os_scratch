@@ -4,84 +4,169 @@
  *  参考Linus Torvalds linux-0.11
  */
 
-/*
- *  该程序用于将bootsect写入磁盘映像文件
- *
- * - bootsect: 最长为512字节的8086机器码
- *
- * ld86在链接程序生成bootsect可执行程序文件时，会在文件头部加上minix 执行头部信息
- *
- * 该模块首先检查bootsect程序模块文件类型是否正确，并将检查结果在终端上显示出来
- * (在执行make的时候会显示结果)，然后删除模块minix文件结构头部并扩充到正确的长度。
- * 同时将一些提示信息写入stderr标准错误输出。
- * 该程序不属于系统代码的一部分，其使用的头文件等均属于宿主机器linux系统的标准
- * 库文件，在这里只是构建了一个将系统代码编译连接到一个映像文件的工具，并将该程
- * 序在makefile中当作一个命令使用。
- *
- */
-
  #include <stdio.h>
  #include <string.h>
  #include <stdlib.h>
  #include <sys/types.h>
  #include <sys/stat.h>
  #include <linux/fs.h>
+ #include <linux/kdev_t.h>
  #include <unistd.h>
  #include <fcntl.h>
+ 
+ #define SYS_SIZE 0x3000
+ 
+ #define DEFAULT_MAJOR_ROOT 2
+ #define DEFAULT_MINOR_ROOT 0x1d
+ 
+ #define SETUP_SECTS  4
+ #define STRINGIFY(x) #x
 
- #define MINIX_HEADER 32     /* minix 二进制模块头部长度为32 字节 */
-
- /* 显示出错信息，并终止程序。 */
  void die(char *str)
  {
       fprintf(stderr, "%s\n", str);
       exit(1);
  }
 
- /* argv包含2个参数 argv[0]为该程序执行路径，另一个位bootsect执行程序 */
- /* 程序没有对大于2个参数进行容错处理 */
+ void usage(void)
+ {
+	 die("Usage: build boot system [rootdev] [> image]");
+ }
+
  int main(int argc, char **argv)
  {
-      int i, id;
+      int i, c, id;
       char buf[1024];
-      fprintf(stderr, "delete the minix header first, now begin\n");
+      char major_root, minor_root;
+      struct stat sb;
 
-      /* 初始化buf 缓冲区，全置0。 */
+      if ((argc != 3) && (argc != 4))
+      {
+          usage();
+      }
+      
+      if (argc == 4)
+      {
+          if (strcmp(argv[3], "FLOPPY"))
+          {
+              if (stat(argv[3], &sb)) 
+              {
+                 perror(argv[3]);
+                 die("Couldn't stat root device.");
+              }
+              major_root = MAJOR(sb.st_rdev);
+              minor_root = MINOR(sb.st_rdev);
+          }
+          else
+          {
+              major_root = 0;
+              minor_root = 0;
+          }
+      }
+      else
+      {
+          major_root = DEFAULT_MAJOR_ROOT;
+          minor_root = DEFAULT_MINOR_ROOT;
+      }
+      
+      fprintf(stderr, "Root device is (%d, %d)\n", major_root, minor_root);
+      if ((major_root != 2) && (major_root != 3) && (major_root != 0))
+      {
+          fprintf(stderr, "Illegal root device (major = %d)\n", major_root);
+          die("Bad root device --- major #");
+      }
+
       for(i=0; i<1024; i++) 
       {
         buf[i] = 0;
       }
 
-      /* 以只读方式打开参数1 指定的文件(bootsect)，若出错则显示出错信息，退出。*/
       if((id = open(argv[1], O_RDONLY, 0)) <0)
       {
         die("Unable to open 'boot'");
       }
 
-      /* 读取实际代码数据，应该返回读取字节数为512 字节。 */
-      i = read(id, buf, sizeof(buf));
+      i = read(id, buf, 512);
       fprintf(stderr, "Boot sector %d bytes.\n", i);
-      if(i != 1024)
+      if(i != 512)
       {
-        die("Boot block must be exactly 1024 bytes");
+        die("Boot block must be exactly 512 bytes");
       }
 
-      /* 判断boot 块0x510 处是否有可引导标志0xAA55。 */
       if((*(unsigned short*)(buf+510)) != 0xAA55)
       {
         die("Boot block hasn't got boot flag (0xAA55)");
       }
-
-      /* 将该boot 块512 字节的数据写到标准输出stdout，若写出字节数不对，则显示出错信息，退出。 */
-      /* makefile文件中执行该程序中会将boot 块512 字节重定向到Image映像文件中 */
+      
+      buf[508] = (char) minor_root;
+	    buf[509] = (char) major_root;
+      
       i = write(1, buf, 512);
       if(i != 512)
       {
         die("Write call failed");
       }
+      
+      c = read(id, buf, sizeof(buf));
+      for(i=c; c > 0; i += c)
+      {
+          if(write(1, buf, c) != c)
+          {
+             die("Write call failed");
+          }
 
-      /* 最后关闭bootsect 模块文件。 */
+          c = read(id, buf, sizeof(buf));
+      }
       close(id);
+      
+      if(i > SETUP_SECTS * 512)
+      {
+          die("Setup exceeds "STRINGIFY(SETUP_SECTS)" sectors - rewrite build/boot/setup");
+      }
+      
+      fprintf(stderr, "Setup is %d bytes.\n", i);
+      
+      for (c = 0; c < sizeof (buf); c++)    buf[c] = '\0';
+      
+      while (i < SETUP_SECTS * 512)
+      {
+          c = SETUP_SECTS * 512 - i;
+          if (c > sizeof (buf))
+          {
+             c = sizeof (buf);
+          }
+          if (write (1, buf, c) != c)
+          {
+             die ("Write call failed");
+          }
+
+          i += c;
+      }
+      
+      if ((id=open(argv[2],O_RDONLY,0))<0)
+      {
+          die("Unable to open 'system'");
+      }
+
+    //	if (read(id,buf,GCC_HEADER) != GCC_HEADER)
+    //  die("Unable to read header of 'system'");
+    //	if (((long *) buf)[5] != 0)
+    //  die("Non-GCC header of 'system'");
+      for (i=0 ; (c=read(id,buf,sizeof(buf)))>0 ; i+=c )
+      {
+          if (write(1,buf,c)!=c)
+          {
+             die("Write call failed");
+          }
+      }
+      close(id);
+
+      fprintf(stderr,"System is %d bytes.\n",i);
+
+      if (i > SYS_SIZE*16)
+      {
+          die("System is too big");
+      }
 
       return (0);
  }

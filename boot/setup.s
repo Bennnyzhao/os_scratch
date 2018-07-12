@@ -157,16 +157,3 @@ gdt_48:
     .word gdt, 0x9
   
 .org 0x800
-.code32
-    movl $0x10, %eax
-    mov %ax, %ds
-    movl $0xb8c80, %ebx
-    mov $0x0c41, %dx
-    movw %dx, (%ebx)
-    add $0x2, %ebx
-    mov $0x0c42, %dx
-    movw %dx, (%ebx)
-    .word 0xFEEB
-#loop:
-    #jmp loop
-
