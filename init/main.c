@@ -72,6 +72,7 @@ static void get_time(void)
 
 unsigned long pos;
 unsigned long x;
+unsigned int flag=0;
 
 void main(void)
 {
@@ -82,15 +83,20 @@ void main(void)
     printk("hello printk %d\n", i);
     printk("time is ");
     pos = get_pos(&x);
-    while(1);
+    while(1){
+      if(flag){
+        flag=0;
+        get_time();
+        set_pos(pos, x);
+        printk("%02d:%02d:%02d",timenow.tm_hour, timenow.tm_min, timenow.tm_sec);
+      }
+    }
 }
 
 void do_timer(void)
 {
     //outb(0x20,0x20);
-    get_time();
-    set_pos(pos, x);
-    printk("%02d:%02d:%02d",timenow.tm_hour, timenow.tm_min, timenow.tm_sec);
+    flag=1;
 }
 
 void set_int(void)
