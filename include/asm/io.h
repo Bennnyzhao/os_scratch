@@ -1,4 +1,8 @@
 /* 在前面的main.c中已经注释过 现在放在该文件内 */
+#define outb(value,port) \
+__asm__ ("outb %%al,%%dx"::"a" (value),"d" (port))
+
+
 #define outb_p(value,port) \
     __asm__ ("outb %%al,%%dx\n" \
             "\tjmp 1f\n" \

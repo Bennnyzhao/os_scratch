@@ -150,6 +150,17 @@ static inline void set_cursor(void)
 	sti();
 }
 
+void set_pos(unsigned long position, unsigned long pos_x)
+{
+    pos = position;
+    x   = pos_x;
+}
+
+unsigned long get_pos(unsigned long *pos_x)
+{
+    *pos_x = x;
+    return pos;
+}
 
 void con_write(char *buf)
 {
