@@ -9,9 +9,7 @@ _start:
     mov %ax, %es
     mov %ax, %fs
     mov %ax, %gs
-    //mov %ax, %ss
-    //movl $(0x800000), %esp
-    lss set_stack, %esp
+    lss stack_start, %esp
     
     call setup_idt
     call setup_gdt
@@ -23,8 +21,7 @@ reload_cs:
     mov %ax, %es
     mov %ax, %fs
     mov %ax, %gs
-    mov %ax, %ss
-    movl $(0x1000000), %esp
+    lss stack_start, %esp
     
     xorl %eax, %eax
 1:  incl %eax
@@ -39,11 +36,6 @@ reload_cs:
     movl %eax, %cr0
     call check_x87
     jmp after_page_tables
-    
-.align 4
-set_stack:
-    .long 0x800000
-    .word 0x10
     
 check_x87:
     fninit
@@ -120,7 +112,7 @@ ignore_int:
    mov %ax, %es
    mov %ax, %fs
    pushl $int_msg
-  // call printk
+   call printk
    pop  %fs
    pop  %es
    pop  %ds

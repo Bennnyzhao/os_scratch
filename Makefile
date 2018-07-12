@@ -11,6 +11,7 @@ CPP	=cpp -nostdinc -Iinclude
 
 ROOT_DEV= #FLOPPY
 
+ARCHIVES=kernel/kernel.o
 DRIVERS =kernel/chr_drv/chr_drv.a
 
 .s.o:
@@ -41,8 +42,9 @@ boot/boot.o: boot/boot.s
 boot/setup.o: boot/setup.s
 
 tools/system: boot/head.o init/main.o \
-$(DRIVERS)
+$(ARCHIVES) $(DRIVERS)
 	$(LD) $(LDFLAGS) boot/head.o init/main.o $(DRIVERS) \
+	$(ARCHIVES) \
 -o tools/system
 	nm tools/system | grep -v '\(compiled\)\|\(\.o$$\)\|\( [aU] \)\|\(\.\.ng$$\)\|\(LASH[RL]DI\)'| sort > System.map
 
@@ -54,17 +56,20 @@ boot/boot: boot/boot.o boot/setup.o
 kernel/chr_drv/chr_drv.a:
 	(cd kernel/chr_drv; make)
 
+kernel/kernel.o:
+	(cd kernel; make)
+
 clean:
 	rm -f Image System.map boot/boot
 	rm -f init/*.o tools/system boot/*.o tools/build
-	(cd kernel/chr_drv; make clean)
+	(cd kernel; make clean)
 
 dep:
 	sed '/\#\#\# Dependencies/q' < Makefile > tmp_make
 	(for i in init/*.c;do echo -n "init/";$(CPP) -M $$i;done) >> tmp_make
 	cp tmp_make Makefile
-	(cd kernel/chr_drv; make dep)
+	(cd kernel; make dep)
 
 ### Dependencies:
 init/main.o: init/main.c \
-include/linux/tty.h
+  include/linux/tty.h include/linux/kernel.h

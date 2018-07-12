@@ -45,4 +45,3 @@ console.s console.o: console.c \
   ../../include/linux/tty.h \
   ../../include/asm/io.h \
   ../../include/asm/system.h
-
