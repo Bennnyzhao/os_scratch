@@ -81,9 +81,9 @@ struct task_struct {
     long state;
     long counter;
     long priority;
-    //long signal;
-//    struct sigaction sigaction[32];
-    //long blocked;
+    long signal;
+    struct sigaction sigaction[32];
+    long blocked;
     int exit_code;
     unsigned long start_code,end_code,end_data,brk,start_stack;
     long pid,father,pgrp,session,leader;
@@ -109,6 +109,7 @@ struct task_struct {
 
 #define INIT_TASK \
 /* state etc */	{ 0,15,15, \
+		0,{{},},0,\
 /* ec,brk... */	0,0,0,0,0,0, \
 /* pid etc.. */	0,-1,0,0,0, \
 /* uid etc */	0,0,0,0,0,0, \

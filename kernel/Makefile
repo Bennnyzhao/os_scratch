@@ -17,8 +17,8 @@ CPP	=gcc -E -nostdinc -I../include
 	$(CC) $(CFLAGS) \
 	-c -o $*.o $<
 
-OBJS  = sched.o printk.o system_call.o vsprintf.o fork.o \
-    panic.o
+OBJS  = sched.o printk.o system_call.o vsprintf.o asm.o fork.o \
+    panic.o signal.o exit.o traps.o sys.o mktime.o
 
 kernel.o: $(OBJS)
 	$(LD) $(LDFLAGS) -r -o kernel.o $(OBJS)
@@ -28,6 +28,7 @@ clean:
 	rm -f core *.o *.a tmp_make
 	for i in *.c;do rm -f `basename $$i .c`.s;done
 	(cd chr_drv; make clean)
+	(cd math; make clean)
 
 dep:
 	sed '/\#\#\# Dependencies/q' < Makefile > tmp_make

@@ -5,6 +5,7 @@
 #include <asm/system.h>
 #include <asm/io.h>
 
+#include <signal.h>
 
 void show_task(int nr, struct task_struct *p)
 {
@@ -72,6 +73,17 @@ void schedule(void)
 {
     int i, next, c;
     struct task_struct **p;
+
+    for (p=&LAST_TASK; p>&FIRST_TASK;--p)
+	if (*p) {
+	    if ((*p)->alarm && (*p)->alarm<jiffies) {
+		(*p)->signal |= (1<<(SIGALRM-1));
+		(*p)->alarm = 0;
+	    }
+	    if (((*p)->signal & ~(_BLOCKABLE & (*p)->blocked)) &&
+		(*p)->state==TASK_INTERRUPTIBLE)
+		(*p)->state=TASK_RUNNING;
+	}
 
     while(1) {
 	c = -1;
@@ -146,15 +158,15 @@ void wake_up(struct task_struct **p)
 }
 
 static int flag =1;
-void do_timer(void)
+void do_timer(int cpl)
 {
-    //if (cpl)
+    if (cpl)
 	current->utime++;
-    //else
-//	current->stime++;
+    else
+	current->stime++;
     if ((--current->counter)>0) return;
 	current->counter=0;
-//    if (!cpl) return;
+    if (!cpl) return;
     if(flag==0) {
 	flag = 1;
 	switch_to(0);

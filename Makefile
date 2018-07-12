@@ -14,6 +14,7 @@ ROOT_DEV= #FLOPPY
 
 ARCHIVES=kernel/kernel.o mm/mm.o
 DRIVERS =kernel/chr_drv/chr_drv.a
+MATH	=kernel/math/math.a
 
 .s.o:
 	$(AS) --32 -o $*.o $<
@@ -43,9 +44,9 @@ boot/boot.o: boot/boot.s
 boot/setup.o: boot/setup.s
 
 tools/system: boot/head.o init/main.o \
-$(ARCHIVES) $(DRIVERS)
+$(ARCHIVES) $(DRIVERS) $(MATH)
 	$(LD) $(LDFLAGS) boot/head.o init/main.o $(DRIVERS) \
-	$(ARCHIVES) \
+	$(ARCHIVES) $(MATH) \
 -o tools/system
 	nm tools/system | grep -v '\(compiled\)\|\(\.o$$\)\|\( [aU] \)\|\(\.\.ng$$\)\|\(LASH[RL]DI\)'| sort > System.map
 
@@ -53,6 +54,9 @@ boot/boot: boot/boot.o boot/setup.o
 	$(LD) $(LDFLAGS) boot/boot.o boot/setup.o -o boot/bootsect
 	objcopy -O binary -R .note -R .comment boot/bootsect boot/boot
 	rm boot/bootsect -f
+
+kernel/math/math.a:
+	(cd kernel/math;make)
 
 kernel/chr_drv/chr_drv.a:
 	(cd kernel/chr_drv; make)

@@ -2,6 +2,7 @@
 #define _UNISTD_H
 #define __NR_setup	0	/* used only by init, to get system going */
 #define __NR_fork	1
+#define __NR_pause	2
 
 #define _syscall0(type,name)\
 type name(void)\

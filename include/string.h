@@ -1,7 +1,7 @@
 #ifndef _STRING_H_
 #define _STRING_H_
 
-extern inline int strlen(const char* s)
+static inline int strlen(const char* s)
 {
     register int __res;
     __asm__("cld\n\t"

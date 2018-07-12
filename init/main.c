@@ -1,30 +1,23 @@
 /*
      init/main.c		Reference to Linus Torvalds Linux-0.11
 */
+#define __LIBRARY__
 #include <unistd.h>
-inline  _syscall0(int,fork) 
+#include <time.h>
+
+inline _syscall0(int,fork) 
+inline _syscall0(int,pause)
 
 #include <linux/head.h>
 #include <linux/tty.h>
-#include <linux/kernel.h>
+//#include <linux/kernel.h>
 #include <asm/io.h>
 #include <asm/system.h>
 #include <linux/sched.h>
 
+#include <stdarg.h>
+
 extern void mem_init(long start, long end);
-
-struct tm {
-	int tm_sec;
-	int tm_min;
-	int tm_hour;
-	int tm_mday;
-	int tm_mon;
-	int tm_year;
-	int tm_wday;
-	int tm_yday;
-	int tm_isdst;
-};
-
 
 #define CMOS_READ(addr) ({ \
    outb_p(0x80|addr,0x70); \
@@ -33,10 +26,9 @@ struct tm {
 
 #define BCD_TO_BIN(val) ((val)=((val)&15) + ((val)>>4)*10)
 
-struct tm timenow;
-static void get_time(void)
+static void time_init(void)
 {
-	//struct tm time;
+	struct tm timenow;
 
 	do {
 		timenow.tm_sec = CMOS_READ(0);
@@ -52,24 +44,13 @@ static void get_time(void)
 	BCD_TO_BIN(timenow.tm_mday);
 	BCD_TO_BIN(timenow.tm_mon);
 	BCD_TO_BIN(timenow.tm_year);
-	//timenow.tm_mon--;
-	//startup_time = kernel_mktime(&timenow);
+	timenow.tm_mon--;
+	startup_time = kernel_mktime(&timenow);
 }
 
 #define EXT_MEM_K (*(unsigned short *)0x90002)
 
-unsigned long pos;
-unsigned long x;
-
-static int task_demo(int num)
-{
-    int i=0;
-    while(1){
-	task_int(num);
-	for(i=0; i<1000000;i++);
-    }
-    return 0;
-}
+static int task_demo(int num);
 
 static long memory_end = 0;
 static long buffer_memory_end = 0;
@@ -90,7 +71,9 @@ void main(void)
 	buffer_memory_end = 1*1024*1024;
     main_memory_start = buffer_memory_end;
     mem_init(main_memory_start, memory_end);
+    trap_init();
     con_init();
+    time_init();
     printk("hello printk %d\n", i);
     sched_init();
     sti();
@@ -99,35 +82,18 @@ void main(void)
 	task_demo(1);
 	while(1);
     }
-    task_demo(2);
-    while(1);
+
+    for(;;) pause();
 }
 
-void dispaly_time(void)
-{   char i, *p;
-    p = display_tm;
-    get_time();
-    i = timenow.tm_hour/10;
-    *p = i+0x30;
-    p+=2;
-    i = timenow.tm_hour%10;
-    *p = i+0x30;
-    p+=2;
-    *p= ':';
-    p+=2;
-    i = timenow.tm_min/10;
-    *p = i+0x30;
-    p+=2;
-    i = timenow.tm_min%10;
-    *p = i+0x30;
-    p+=2;
-    *p= ':';
-    p+=2;
-    i = timenow.tm_sec/10;
-    *p = i+0x30;
-    p+=2;
-    i = timenow.tm_sec%10;
-    *p = i+0x30;
+static int task_demo(int num)
+{
+    int i=0;
+    while(1){
+	task_int(num);
+	for(i=0; i<1000000;i++);
+    }
+    return 0;
 }
 
 void display_task(int num)
