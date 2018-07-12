@@ -106,10 +106,18 @@ int do_exit(long code)
 	    if (task[i]->state == TASK_ZOMBIE)
 		(void) send_sig(SIGCHLD,task[1],1);
 	}
-   /* for (i=0; i<NR_OPEN; i++)
+    for (i=0; i<NR_OPEN; i++)
 	if (current->filp[i])
 	    sys_close(i);
-    */
+    
+    iput(current->pwd);
+    current->pwd=NULL;
+    iput(current->root);
+    current->root=NULL;
+    iput(current->executable);
+    current->executable=NULL;
+    if (current->leader && current->tty >= 0)
+	tty_table[current->tty].pgrp = 0;
     if (last_task_used_math == current)
 	last_task_used_math = NULL;
     if (current->leader)

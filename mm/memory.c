@@ -5,12 +5,12 @@
 #include <linux/head.h>
 #include <linux/kernel.h>
 
-//volatile void do_exit(long code);
+volatile void do_exit(long code);
 
 static inline volatile void oom(void)
 {
     printk("out of memory\n\r");
-//    do_exit(SIGSEGV);
+    do_exit(SIGSEGV);
 }
 
 #define invalidate() \
@@ -247,17 +247,17 @@ static int share_page(unsigned long address)
 {
     struct task_struct **p;
 
-    /*if (!current->executable)
+    if (!current->executable)
 	return 0;
     if (current->executable->i_count < 2)
-	return 0;*/
+	return 0;
     for (p=&LAST_TASK; p>&FIRST_TASK; --p) {
 	if (!*p)
 	    continue;
 	if (current == *p)
 	    continue;
-//	if ((*p)->executable != current->executable)
-//	    continue;
+	if ((*p)->executable != current->executable)
+	    continue;
 	if (try_to_share(address, *p))
 	    return 1;
     }
@@ -273,13 +273,13 @@ void do_no_page(unsigned long error_code, unsigned long address)
 
     address &= 0xfffff000;
     tmp = address - current->start_code;
- /*   if (!current->executable || tmp >= current->end_data) {
+    if (!current->executable || tmp >= current->end_data) {
 	get_empty_page(address);
 	return;
-    }*/
+    }
     if (share_page(tmp))
 	return;
-    /*if (!(page = get_free_page()))
+    if (!(page = get_free_page()))
 	oom();
     block = 1 + tmp/BLOCK_SIZE;
     for (i=0; i<4; block++, i++) {
@@ -296,7 +296,7 @@ void do_no_page(unsigned long error_code, unsigned long address)
     if (put_page(page, address))
 	return;
     free_page(page);
-    oom();*/
+    oom();
 }
 
 void mem_init(long start_mem, long end_mem)

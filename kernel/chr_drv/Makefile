@@ -11,7 +11,7 @@ AS	=as --32
 LD	=ld
 LDFLAGS	=-s -x
 CC	=gcc -m32
-CFLAGS	=-Wall -O0 -fstrength-reduce -fomit-frame-pointer \
+CFLAGS	=-Wall -O0 -fno-stack-protector -fstrength-reduce -fomit-frame-pointer \
 	-finline-functions -nostdinc -I../../include
 CPP	=gcc -E -nostdinc -I../../include
 
@@ -19,12 +19,13 @@ CPP	=gcc -E -nostdinc -I../../include
 	$(CC) $(CFLAGS) \
 	-S -o $*.s $<
 .s.o:
-	$(AS) -o $*.o $<
+	$(AS) -c -o $*.o $<
 .c.o:
 	$(CC) $(CFLAGS) \
 	-c -o $*.o $<
 
-OBJS  = console.o keyboard.o
+OBJS  = tty_io.o console.o keyboard.o serial.o rs_io.o \
+	tty_ioctl.o
 
 chr_drv.a: $(OBJS)
 	$(AR) rcs chr_drv.a $(OBJS)
@@ -44,7 +45,24 @@ dep:
 	cp tmp_make Makefile
 
 ### Dependencies:
-console.s console.o: console.c \
-  ../../include/linux/tty.h \
-  ../../include/asm/io.h \
-  ../../include/asm/system.h
+console.s console.o : console.c ../../include/linux/sched.h \
+  ../../include/linux/head.h ../../include/linux/fs.h \
+  ../../include/sys/types.h ../../include/linux/mm.h ../../include/signal.h \
+  ../../include/linux/tty.h ../../include/termios.h ../../include/asm/io.h \
+  ../../include/asm/system.h 
+serial.s serial.o : serial.c ../../include/linux/tty.h ../../include/termios.h \
+  ../../include/linux/sched.h ../../include/linux/head.h \
+  ../../include/linux/fs.h ../../include/sys/types.h ../../include/linux/mm.h \
+  ../../include/signal.h ../../include/asm/system.h ../../include/asm/io.h 
+tty_io.s tty_io.o : tty_io.c ../../include/ctype.h ../../include/errno.h \
+  ../../include/signal.h ../../include/sys/types.h \
+  ../../include/linux/sched.h ../../include/linux/head.h \
+  ../../include/linux/fs.h ../../include/linux/mm.h ../../include/linux/tty.h \
+  ../../include/termios.h ../../include/asm/segment.h \
+  ../../include/asm/system.h 
+tty_ioctl.s tty_ioctl.o : tty_ioctl.c ../../include/errno.h ../../include/termios.h \
+  ../../include/linux/sched.h ../../include/linux/head.h \
+  ../../include/linux/fs.h ../../include/sys/types.h ../../include/linux/mm.h \
+  ../../include/signal.h ../../include/linux/kernel.h \
+  ../../include/linux/tty.h ../../include/asm/io.h \
+  ../../include/asm/segment.h ../../include/asm/system.h 

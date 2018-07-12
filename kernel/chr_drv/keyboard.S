@@ -18,12 +18,12 @@
 /*
  * these are for the keyboard read functions
  */
-//size	= 1024		/* must be a power of two ! And MUST be the same
+size	= 1024		/* must be a power of two ! And MUST be the same
 			   as in tty_io.c !!!! */
-/*head = 4
+head = 4
 tail = 8
 proc_list = 12
-buf = 16*/
+buf = 16
 
 mode:	.byte 0		/* caps, alt, ctrl and shift mode */
 leds:	.byte 2		/* num-lock, caps, scroll-lock mode (nom-lock on) */
@@ -65,9 +65,9 @@ e0_e1:	inb $0x61,%al
 	outb %al,$0x61
 	movb $0x20,%al
 	outb %al,$0x20
-	//pushl $0
-	//call do_tty_interrupt
-	//addl $4,%esp
+	pushl $0
+	call do_tty_interrupt
+	addl $4,%esp
 	pop %es
 	pop %ds
 	popl %edx
@@ -85,7 +85,7 @@ set_e1:	movb $2,e0
  * %ebx:%eax. (%edx is high). The bytes are written in the
  * order %al,%ah,%eal,%eah,%bl,%bh ... until %eax is zero.
  */
-/*put_queue:
+put_queue:
 	pushl %ecx
 	pushl %edx
 	movl table_list,%edx		# read-queue for console
@@ -106,11 +106,7 @@ set_e1:	movb $2,e0
 	movl $0,(%ecx)
 3:	popl %edx
 	popl %ecx
-	ret*/
-put_queue:
-	movb %al,kb_buf
-	call do_tty_interrupt
-    ret
+	ret
 
 ctrl:	movb $0x04,%al
 	jmp 1f
@@ -197,7 +193,6 @@ ok_cur:	shll $16,%eax
 	movw $0x5b1b,%ax
 	xorl %ebx,%ebx
 	jmp put_queue
-	ret
 
 #if defined(KBD_FR)
 num_table:
@@ -216,7 +211,7 @@ func:
 	pushl %eax
 	pushl %ecx
 	pushl %edx
-	//call show_stat
+	call show_stat
 	popl %edx
 	popl %ecx
 	popl %eax
@@ -498,7 +493,6 @@ minus:	cmpb $1,e0
 	movl $'/,%eax
 	xorl %ebx,%ebx
 	jmp put_queue
-	ret
 
 /*
  * This table decides which routine to call when a scan-code has been

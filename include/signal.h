@@ -68,5 +68,4 @@ int sigprocmask(int how, sigset_t *set, sigset_t *oldset);
 int sigsuspend(sigset_t *sigmask);
 int sigaction(int sig, struct sigaction *act, struct sigaction *oldact);
 
-#endif
-
+#endif /* _SIGNAL_H */

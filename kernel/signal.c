@@ -15,7 +15,7 @@ int sys_ssetmask(int newmask)
 {
 	int old=current->blocked;
 
-	current->blocked = newmask & _BLOCKABLE;
+	current->blocked = newmask & ~(1<<(SIGKILL-1));
 	return old;
 }
 
@@ -92,7 +92,6 @@ void do_signal(long signr, long eax, long ebx, long ecx,long edx,
 	else
 	    do_exit(_S(signr));
     }
-
     if (sa->sa_flags & SA_ONESHOT)
 	sa->sa_handler = NULL;
     *(&eip) = sa_handler;

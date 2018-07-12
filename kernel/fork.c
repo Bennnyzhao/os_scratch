@@ -2,7 +2,7 @@
 
 #include <linux/sched.h>
 #include <linux/kernel.h>
-//#include <asm/segment.h>
+#include <asm/segment.h>
 #include <asm/system.h>
 
 extern void write_verify(unsigned long address);
@@ -54,7 +54,7 @@ int copy_process(int nr, long ebp, long edi, long esi, long gs, long none,
 {
     struct task_struct *p;
     int i;
-    //struct file *f;
+    struct file *f;
 
     p = (struct task_struct*) get_free_page();
     if (!p)
@@ -66,7 +66,7 @@ int copy_process(int nr, long ebp, long edi, long esi, long gs, long none,
     p->pid = last_pid;
     p->father = current->pid;
     p->counter = p->priority;
-    //p->signal = 0;
+    p->signal = 0;
     p->alarm = 0;
     p->leader = 0;
     p->utime = p->stime = 0;
@@ -98,7 +98,7 @@ int copy_process(int nr, long ebp, long edi, long esi, long gs, long none,
 	free_page((long)p);
 	return -EAGAIN;
     }
-    /*for (i=0; i<NR_OPEN; i++)
+    for (i=0; i<NR_OPEN; i++)
 	if (f=p->filp[i])
 	    f->f_count++;
     if (current->pwd)
@@ -106,7 +106,7 @@ int copy_process(int nr, long ebp, long edi, long esi, long gs, long none,
     if (current->root)
 	current->root->i_count++;
     if (current->executable)
-	current->executable->i_count++;*/
+	current->executable->i_count++;
     set_tss_desc(gdt+(nr<<1)+FIRST_TSS_ENTRY, &(p->tss));
     set_ldt_desc(gdt+(nr<<1)+FIRST_LDT_ENTRY, &(p->ldt));
     p->state = TASK_RUNNING;

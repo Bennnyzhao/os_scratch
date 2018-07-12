@@ -28,6 +28,7 @@ clean:
 	rm -f core *.o *.a tmp_make
 	for i in *.c;do rm -f `basename $$i .c`.s;done
 	(cd chr_drv; make clean)
+	(cd blk_drv; make clean)
 	(cd math; make clean)
 
 dep:
@@ -36,6 +37,7 @@ dep:
 		$(CPP) -M $$i;done) >> tmp_make
 	cp tmp_make Makefile
 	(cd chr_drv; make dep)
+	(cd blk_drv; make dep)
 
 ### Dependencies:
 printk.s printk.o: printk.c ../include/stdarg.h \
