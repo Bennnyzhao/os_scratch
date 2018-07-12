@@ -96,28 +96,13 @@ tmp_floppy_area:
    .fill 1024, 1, 0
 
 after_page_tables:
-   pushl $0xAB
+   pushl $0
    pushl $0
    pushl $0
    pushl $L6
-   //pushl $main
+   pushl $main
    jmp setup_paging
 L6:
-    movl addr, %ebx
-    mov $0x0c41, %dx
-    movw %dx, (%ebx)
-    add $0x2, %ebx
-    mov $0x0c42, %dx
-    movw %dx, (%ebx)
-    add $0x2, %ebx
-    mov $0x0c43, %dx
-    movw %dx, (%ebx)
-loop:
-    jmp loop
-    
-.align 4
-addr:
-    .long 0xb8c80
    jmp L6
 
 int_msg:

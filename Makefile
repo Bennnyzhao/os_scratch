@@ -4,13 +4,18 @@ LD	=ld
 LDFLAGS	:=-m elf_i386 -Ttext 0 -e _start
 CC = gcc 
 
-CFLAGS = -Wall -O2 -fomit-frame-pointer
+HOST-CFLAGS = -Wall -O2 -fomit-frame-pointer
+CFLAGS = -Wall -fomit-frame-pointer
 
 ROOT_DEV= #FLOPPY
 
 .s.o:
 	$(AS) --32 -o $*.o $<
 	
+.c.o:
+	$(CC) $(CFLAGS) \
+	-m32 -nostdinc -I./include -c -o $*.o $<
+
 all: Image
 
 Image: boot/boot tools/system tools/build
@@ -20,7 +25,7 @@ Image: boot/boot tools/system tools/build
 	sync
 
 tools/build: tools/build.c
-	$(CC) $(CFLAGS) \
+	$(CC) $(HOST-CFLAGS) \
 	-o tools/build tools/build.c
 
 boot/head.o: boot/head.s
@@ -31,8 +36,8 @@ boot/boot.o: boot/boot.s
 
 boot/setup.o: boot/setup.s
 
-tools/system: boot/head.o
-	$(LD) $(LDFLAGS) boot/head.o -o tools/system
+tools/system: boot/head.o init/main.o
+	$(LD) $(LDFLAGS) boot/head.o init/main.o -o tools/system
 	nm tools/system | grep -v '\(compiled\)\|\(\.o$$\)\|\( [aU] \)\|\(\.\.ng$$\)\|\(LASH[RL]DI\)'| sort > System.map
 
 boot/boot: boot/boot.o boot/setup.o
@@ -42,5 +47,12 @@ boot/boot: boot/boot.o boot/setup.o
 
 clean:
 	rm -f Image System.map boot/boot
-	rm -f tools/system boot/*.o tools/build
+	rm -f init/*.o tools/system boot/*.o tools/build
 
+dep:
+	sed '/\#\#\# Dependencies/q' < Makefile > tmp_make
+	(for i in init/*.c;do echo -n "init/";$(CPP) -M $$i;done) >> tmp_make
+	cp tmp_make Makefile
+
+### Dependencies:
+init/main.o: init/main.c
