@@ -14,9 +14,7 @@
 void set_int(void);
 extern int timer_interrupt(void);
 
-typedef struct desc_struct {
-	unsigned long a,b;
-} desc_table[256];
+
 
 extern desc_table idt;
 
@@ -72,7 +70,6 @@ static void get_time(void)
 
 unsigned long pos;
 unsigned long x;
-unsigned int flag=0;
 
 void main(void)
 {
@@ -81,22 +78,43 @@ void main(void)
     set_int();
     sti();
     printk("hello printk %d\n", i);
-    printk("time is ");
-    pos = get_pos(&x);
-    while(1){
-      if(flag){
-        flag=0;
-        get_time();
-        set_pos(pos, x);
-        printk("%02d:%02d:%02d",timenow.tm_hour, timenow.tm_min, timenow.tm_sec);
-      }
-    }
+    //pos = get_pos(&x);
+    while(1);
+}
+
+static void dispaly_time(void)
+{   char i, *p;
+    p = display_tm;
+    get_time();
+    i = timenow.tm_hour/10;
+    *p = i+0x30;
+    p+=2;
+    i = timenow.tm_hour%10;
+    *p = i+0x30;
+    p+=2;
+    *p= ':';
+    p+=2;
+    i = timenow.tm_min/10;
+    *p = i+0x30;
+    p+=2;
+    i = timenow.tm_min%10;
+    *p = i+0x30;
+    p+=2;
+    *p= ':';
+    p+=2;
+    i = timenow.tm_sec/10;
+    *p = i+0x30;
+    p+=2;
+    i = timenow.tm_sec%10;
+    *p = i+0x30;
 }
 
 void do_timer(void)
 {
     //outb(0x20,0x20);
-    flag=1;
+    //set_pos(pos, x);
+    //printk("%02d:%02d:%02d",timenow.tm_hour, timenow.tm_min, timenow.tm_sec);
+    dispaly_time();
 }
 
 void set_int(void)

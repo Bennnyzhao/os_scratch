@@ -24,14 +24,17 @@ CPP	=gcc -E -nostdinc -I../../include
 	$(CC) $(CFLAGS) \
 	-c -o $*.o $<
 
-OBJS  = console.o
+OBJS  = console.o keyboard.o
 
 chr_drv.a: $(OBJS)
 	$(AR) rcs chr_drv.a $(OBJS)
 	sync
 
+keyboard.s: keyboard.S ../../include/linux/config.h
+	$(CPP) -traditional keyboard.S -o keyboard.s
+
 clean:
-	rm -f core *.o *.a tmp_make
+	rm -f core *.o *.a tmp_make keyboard.s
 	for i in *.c;do rm -f `basename $$i .c`.s;done
 
 dep:

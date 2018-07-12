@@ -38,6 +38,9 @@ static unsigned long	x,y;
 static unsigned long	top,bottom;
 static unsigned char	attr=0x07;
 
+extern desc_table idt;
+extern void keyboard_interrupt(void);
+
 
 static inline void gotoxy(unsigned int new_x,unsigned int new_y)
 {
@@ -199,6 +202,7 @@ void con_write(char *buf)
 
 void con_init(void)
 {
+    register unsigned char a;
     char *display_desc = "????";
 	char *display_ptr;
 
@@ -246,7 +250,7 @@ void con_init(void)
     }
 
     display_ptr = ((char*)video_mem_start) + video_size_row - 8;
-
+    display_tm  = display_ptr - 18;
     while(*display_desc)
     {
         *display_ptr = *display_desc++;
@@ -259,5 +263,24 @@ void con_init(void)
 	bottom	= video_num_lines;
     
     gotoxy(ORIG_X,ORIG_Y);
+    
+    set_trap_gate(0x21,&keyboard_interrupt);
+	outb_p(inb_p(0x21)&0xfd,0x21);
+	a=inb_p(0x61);
+	outb_p(a|0x80,0x61);
+	outb(a,0x61);
 }
+
+void do_tty_interrupt(void)
+{
+    //char *buf = kb_buf;
+    //printk("keyboard\n");
+    printk(kb_buf);
+    //while(*buf)
+    //{
+    //    *buf = 0;
+    //    buf++;
+    //}
+}
+
 
